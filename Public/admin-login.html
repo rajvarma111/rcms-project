@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,4 +60,67 @@
         });
     </script>
 </body>
+=======
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | RCMS</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <section>
+        <h2>RCMS Admin Login</h2>
+        <p>Enter your administrator password to continue.</p>
+
+        <form id="loginForm">
+            <label for="password">Admin Password</label>
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter admin password"
+                required
+            >
+            <button type="submit">Log In</button>
+        </form>
+
+        <p id="message" role="status"></p>
+        <p><a href="/">Back to Home</a></p>
+    </section>
+
+    <script>
+        const loginForm = document.getElementById("loginForm");
+        const message = document.getElementById("message");
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            message.textContent = "Checking password...";
+
+            try {
+                const response = await fetch("/api/admin/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        password: document.getElementById("password").value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = "/admin.html";
+                } else {
+                    message.textContent = data.message || "Login failed.";
+                }
+            } catch (error) {
+                message.textContent = "Cannot connect to the server.";
+            }
+        });
+    </script>
+</body>
+>>>>>>> origin/main
 </html>

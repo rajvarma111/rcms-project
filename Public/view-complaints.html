@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!DOCTYPE html>
 <html lang="en">
@@ -106,4 +107,114 @@
         loadComplaints();
     </script>
 </body>
+=======
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Complaints | RCMS</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <div class="logo">RCMS</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/complaint.html">Submit Complaint</a>
+            <a href="/admin.html">Admin Dashboard</a>
+        </div>
+    </nav>
+
+    <section>
+        <h2 class="section-title">Submitted Complaints</h2>
+        <p>Admin-only access. Checking your login...</p>
+        <div id="complaintList">Please wait...</div>
+    </section>
+
+    <footer>
+        <p>© 2026 Restaurant Complaint Management System</p>
+    </footer>
+
+    <script>
+        async function loadComplaints() {
+            const complaintList =
+                document.getElementById("complaintList");
+
+            try {
+                // Check whether the admin is logged in.
+                const checkResponse = await fetch("/api/admin/check", {
+                    credentials: "same-origin"
+                });
+
+                if (!checkResponse.ok) {
+                    window.location.replace("/admin-login.html");
+                    return;
+                }
+
+                // Load complaints only after login is confirmed.
+                const response = await fetch("/api/complaints", {
+                    credentials: "same-origin"
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace("/admin-login.html");
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Could not load complaints.");
+                }
+
+                const complaints = await response.json();
+                complaintList.replaceChildren();
+
+                if (complaints.length === 0) {
+                    complaintList.textContent =
+                        "No complaints have been submitted yet.";
+                    return;
+                }
+
+                complaints.forEach(function (complaint) {
+                    const card = document.createElement("div");
+                    card.className = "complaint-card";
+
+                    const title = document.createElement("h3");
+                    title.textContent = "Complaint ID: " + complaint.id;
+
+                    const name = document.createElement("p");
+                    name.textContent = "Customer: " + complaint.name;
+
+                    const email = document.createElement("p");
+                    email.textContent = "Email: " + complaint.email;
+
+                    const category = document.createElement("p");
+                    category.textContent = "Category: " + complaint.category;
+
+                    const description = document.createElement("p");
+                    description.textContent =
+                        "Description: " + complaint.description;
+
+                    const status = document.createElement("p");
+                    status.textContent = "Status: " + complaint.status;
+
+                    card.append(
+                        title, name, email, category, description, status
+                    );
+
+                    complaintList.appendChild(card);
+                });
+
+            } catch (error) {
+                complaintList.textContent =
+                    "Unable to load complaints. Please try again.";
+                console.error(error);
+            }
+        }
+
+        loadComplaints();
+    </script>
+</body>
+>>>>>>> origin/main
 </html>

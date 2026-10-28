@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!DOCTYPE html>
 <html lang="en">
@@ -90,3 +91,97 @@
 </body>
 </html>
 ```
+=======
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Complaint | RCMS</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">RCMS</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/complaint.html">Submit Complaint</a>
+            <a href="/track-complaint.html">Track Complaint</a>
+        </div>
+    </nav>
+
+    <section>
+        <h2 class="section-title">Track Your Complaint</h2>
+        <p>Enter your Complaint ID to check its current status.</p>
+
+        <form id="trackForm">
+            <label for="complaintId">Complaint ID</label>
+            <input
+                type="text"
+                id="complaintId"
+                placeholder="Enter your Complaint ID"
+                required
+            >
+            <button type="submit" class="btn">Check Status</button>
+        </form>
+
+        <div id="trackResult" aria-live="polite"></div>
+    </section>
+
+    <footer>
+        <p>© 2026 Restaurant Complaint Management System</p>
+    </footer>
+
+    <script>
+        const trackForm = document.getElementById("trackForm");
+
+        trackForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const id = document.getElementById("complaintId").value.trim();
+            const result = document.getElementById("trackResult");
+
+            result.textContent = "Checking complaint...";
+
+            try {
+                const response = await fetch("/api/complaints");
+                if (!response.ok) {
+                    throw new Error("Unable to contact the server");
+                }
+
+                const complaints = await response.json();
+                const complaint = complaints.find(item => String(item.id) === id);
+
+                result.replaceChildren();
+
+                if (!complaint) {
+                    result.textContent =
+                        "Complaint not found. Please check your Complaint ID.";
+                    return;
+                }
+
+                const heading = document.createElement("h3");
+                heading.textContent = "Complaint Found";
+
+                const category = document.createElement("p");
+                category.textContent = "Category: " + complaint.category;
+
+                const status = document.createElement("p");
+                status.textContent = "Current Status: " + complaint.status;
+
+                result.append(heading, category, status);
+
+            } catch (error) {
+                result.textContent =
+                    "Unable to check status. Please try again.";
+                console.error(error);
+            }
+        });
+    </script>
+
+</body>
+</html>
+```
+>>>>>>> origin/main
