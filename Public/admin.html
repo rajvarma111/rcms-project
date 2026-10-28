@@ -1,0 +1,653 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#08090b">
+    <meta name="description" content="RCMS administrator dashboard for managing restaurant complaints.">
+    <title>Admin Dashboard | RCMS</title>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        .admin-page {
+            width: min(1200px, 94%);
+            margin: 40px auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        .admin-header h1 {
+            margin: 0 0 8px;
+        }
+
+        .admin-header p {
+            color: var(--muted, #a5a8b0);
+            margin: 0;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .admin-stat {
+            background: linear-gradient(145deg, #191c22, #0e1014);
+            border: 1px solid var(--border, #292c32);
+            border-radius: 16px;
+            padding: 22px;
+        }
+
+        .admin-stat-label {
+            display: block;
+            color: var(--muted, #a5a8b0);
+            font-size: 14px;
+        }
+
+        .admin-stat strong {
+            display: block;
+            font-size: 32px;
+            margin-top: 10px;
+            color: var(--text, #f5f5f5);
+        }
+
+        .admin-toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .admin-toolbar input,
+        .admin-toolbar select {
+            flex: 1 1 220px;
+            min-width: 0;
+            padding: 12px 14px;
+            border: 1px solid var(--border, #292c32);
+            border-radius: 10px;
+            background: var(--surface, #111317);
+            color: var(--text, #f5f5f5);
+        }
+
+        .admin-results {
+            color: var(--muted, #a5a8b0);
+            margin-bottom: 16px;
+        }
+
+        .admin-complaint-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .admin-complaint {
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid var(--border, #292c32);
+            border-radius: 16px;
+            background: var(--surface, #111317);
+        }
+
+        .admin-complaint h3 {
+            overflow-wrap: anywhere;
+            margin-top: 0;
+        }
+
+        .admin-complaint p {
+            overflow-wrap: anywhere;
+            line-height: 1.6;
+        }
+
+        .admin-complaint .complaint-description {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-status-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .admin-status-row label {
+            flex: 1 1 160px;
+        }
+
+        .admin-status-row select {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 11px;
+            border: 1px solid var(--border, #292c32);
+            border-radius: 9px;
+            background: var(--surface-light, #181b20);
+            color: var(--text, #f5f5f5);
+        }
+
+        .admin-status-row button {
+            flex: 0 0 auto;
+        }
+
+        .admin-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: rgba(255, 138, 36, .12);
+            color: #ffb366;
+            font-size: 13px;
+        }
+
+        .admin-message {
+            margin: 0 0 18px;
+            overflow-wrap: anywhere;
+        }
+
+        .admin-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            border: 1px dashed var(--border, #292c32);
+            border-radius: 14px;
+            color: var(--muted, #a5a8b0);
+        }
+
+        .admin-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 16px 3%;
+            border-bottom: 1px solid var(--border, #292c32);
+        }
+
+        .admin-nav-links {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .admin-nav-links a {
+            text-decoration: none;
+        }
+
+        .admin-nav .logo {
+            font-weight: 750;
+            font-size: 20px;
+        }
+
+        .admin-footer {
+            padding: 24px;
+            text-align: center;
+            color: var(--muted, #a5a8b0);
+        }
+
+        @media (max-width: 800px) {
+            .admin-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-complaint-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .admin-page {
+                width: 92%;
+                margin-top: 24px;
+            }
+
+            .admin-stat {
+                padding: 15px;
+            }
+
+            .admin-stat strong {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Admin Navigation -->
+    <nav class="admin-nav">
+        <a href="/" class="logo">🍴 RCMS Admin</a>
+
+        <div class="admin-nav-links">
+            <a href="/">Home</a>
+            <a href="/complaint.html">Submit Complaint</a>
+            <a href="/track-complaint.html">Track Complaint</a>
+            <button type="button" class="btn" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <main class="admin-page">
+
+        <!-- Dashboard Heading -->
+        <header class="admin-header">
+            <div>
+                <p class="eyebrow">MANAGEMENT PANEL</p>
+                <h1>Admin Dashboard</h1>
+                <p>Review complaints, monitor progress and update statuses.</p>
+            </div>
+
+            <button type="button" class="btn btn-outline" id="refreshBtn">
+                ↻ Refresh Data
+            </button>
+        </header>
+
+        <p id="adminMessage" class="admin-message" role="status" aria-live="polite"></p>
+
+        <!-- Statistics -->
+        <section class="admin-stats" aria-label="Complaint statistics">
+            <article class="admin-stat">
+                <span class="admin-stat-label">📋 Total Complaints</span>
+                <strong id="totalCount">—</strong>
+            </article>
+
+            <article class="admin-stat">
+                <span class="admin-stat-label">⏳ Pending</span>
+                <strong id="pendingCount">—</strong>
+            </article>
+
+            <article class="admin-stat">
+                <span class="admin-stat-label">⚙️ In Progress</span>
+                <strong id="progressCount">—</strong>
+            </article>
+
+            <article class="admin-stat">
+                <span class="admin-stat-label">✓ Resolved</span>
+                <strong id="resolvedCount">—</strong>
+            </article>
+        </section>
+
+        <!-- Search and Filters -->
+        <section aria-label="Search and filter complaints">
+            <h2 class="section-title">Manage Complaints</h2>
+
+            <div class="admin-toolbar">
+                <input
+                    type="search"
+                    id="searchInput"
+                    placeholder="Search ID, name, email or category..."
+                    aria-label="Search complaints"
+                >
+
+                <select id="statusFilter" aria-label="Filter by status">
+                    <option value="all">All statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+
+                <select id="categoryFilter" aria-label="Filter by category">
+                    <option value="all">All categories</option>
+                </select>
+            </div>
+
+            <p class="admin-results" id="resultsCount">Loading complaints...</p>
+
+            <div id="adminComplaints" class="admin-complaint-grid">
+                <p>Checking admin login...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="admin-footer">
+        <p>© 2026 Restaurant Complaint Management System | Admin Panel</p>
+    </footer>
+
+    <script>
+        const container = document.getElementById("adminComplaints");
+        const message = document.getElementById("adminMessage");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const searchInput = document.getElementById("searchInput");
+        const statusFilter = document.getElementById("statusFilter");
+        const categoryFilter = document.getElementById("categoryFilter");
+        const resultsCount = document.getElementById("resultsCount");
+
+        let allComplaints = [];
+
+        async function checkAdmin() {
+            try {
+                const response = await fetch("/api/admin/check", {
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    window.location.replace("/admin-login.html");
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                message.textContent = "Unable to check admin login. Check your connection.";
+                return false;
+            }
+        }
+
+        function updateStatistics(complaints) {
+            document.getElementById("totalCount").textContent = complaints.length;
+
+            document.getElementById("pendingCount").textContent =
+                complaints.filter(c => c.status === "Pending").length;
+
+            document.getElementById("progressCount").textContent =
+                complaints.filter(c => c.status === "In Progress").length;
+
+            document.getElementById("resolvedCount").textContent =
+                complaints.filter(c => c.status === "Resolved").length;
+        }
+
+        function updateCategoryOptions(complaints) {
+            const selectedCategory = categoryFilter.value;
+            const categories = [...new Set(
+                complaints.map(c => c.category).filter(Boolean)
+            )].sort((a, b) => a.localeCompare(b));
+
+            categoryFilter.replaceChildren();
+
+            const allOption = document.createElement("option");
+            allOption.value = "all";
+            allOption.textContent = "All categories";
+            categoryFilter.appendChild(allOption);
+
+            categories.forEach(category => {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+
+            if (categories.includes(selectedCategory)) {
+                categoryFilter.value = selectedCategory;
+            }
+        }
+
+        function createTextElement(tag, text, className) {
+            const element = document.createElement(tag);
+            element.textContent = text ?? "";
+
+            if (className) {
+                element.className = className;
+            }
+
+            return element;
+        }
+
+        function renderComplaints() {
+            const search = searchInput.value.trim().toLowerCase();
+            const selectedStatus = statusFilter.value;
+            const selectedCategory = categoryFilter.value;
+
+            const filtered = allComplaints.filter(complaint => {
+                const searchableText = [
+                    complaint.id,
+                    complaint.name,
+                    complaint.email,
+                    complaint.category,
+                    complaint.description
+                ].join(" ").toLowerCase();
+
+                const matchesSearch = searchableText.includes(search);
+                const matchesStatus =
+                    selectedStatus === "all" ||
+                    complaint.status === selectedStatus;
+
+                const matchesCategory =
+                    selectedCategory === "all" ||
+                    complaint.category === selectedCategory;
+
+                return matchesSearch && matchesStatus && matchesCategory;
+            });
+
+            container.replaceChildren();
+
+            resultsCount.textContent =
+                `Showing ${filtered.length} of ${allComplaints.length} complaints`;
+
+            if (filtered.length === 0) {
+                container.appendChild(
+                    createTextElement(
+                        "p",
+                        allComplaints.length === 0
+                            ? "No complaints have been submitted yet."
+                            : "No complaints match your search or filters.",
+                        "admin-empty"
+                    )
+                );
+                return;
+            }
+
+            filtered.forEach(complaint => {
+                const card = document.createElement("article");
+                card.className = "admin-complaint";
+
+                card.appendChild(
+                    createTextElement("h3", `Complaint #${complaint.id}`)
+                );
+
+                card.appendChild(
+                    createTextElement("p", `Name: ${complaint.name}`)
+                );
+
+                card.appendChild(
+                    createTextElement("p", `Email: ${complaint.email}`)
+                );
+
+                card.appendChild(
+                    createTextElement("p", `Category: ${complaint.category}`)
+                );
+
+                card.appendChild(
+                    createTextElement(
+                        "p",
+                        `Submitted: ${formatDate(complaint.created_at || complaint.createdAt)}`
+                    )
+                );
+
+                card.appendChild(
+                    createTextElement(
+                        "p",
+                        `Description: ${complaint.description}`,
+                        "complaint-description"
+                    )
+                );
+
+                const statusLine = document.createElement("p");
+                statusLine.appendChild(
+                    createTextElement("span", `Status: ${complaint.status}`, "admin-status")
+                );
+                card.appendChild(statusLine);
+
+                const statusRow = document.createElement("div");
+                statusRow.className = "admin-status-row";
+
+                const label = document.createElement("label");
+                label.textContent = "Update status";
+
+                const select = document.createElement("select");
+                select.setAttribute(
+                    "aria-label",
+                    `New status for complaint ${complaint.id}`
+                );
+
+                ["Pending", "In Progress", "Resolved"].forEach(status => {
+                    const option = document.createElement("option");
+                    option.value = status;
+                    option.textContent = status;
+                    select.appendChild(option);
+                });
+
+                select.value = complaint.status;
+                label.appendChild(select);
+
+                const saveButton = document.createElement("button");
+                saveButton.type = "button";
+                saveButton.className = "btn";
+                saveButton.textContent = "Save Status";
+
+                saveButton.addEventListener("click", async () => {
+                    if (select.value === complaint.status) {
+                        message.textContent = "The complaint already has this status.";
+                        return;
+                    }
+
+                    saveButton.disabled = true;
+                    message.textContent = `Updating complaint #${complaint.id}...`;
+
+                    try {
+                        const response = await fetch(
+                            `/api/complaints/${encodeURIComponent(complaint.id)}/status`,
+                            {
+                                method: "PATCH",
+                                credentials: "same-origin",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    status: select.value
+                                })
+                            }
+                        );
+
+                        const result = await response.json();
+
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.replace("/admin-login.html");
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(
+                                result.message || "Status update failed."
+                            );
+                        }
+
+                        message.textContent =
+                            `Complaint #${complaint.id} status updated successfully.`;
+
+                        await loadComplaints(false);
+                    } catch (error) {
+                        message.textContent = error.message || "Could not update status.";
+                    } finally {
+                        saveButton.disabled = false;
+                    }
+                });
+
+                statusRow.append(label, saveButton);
+                card.appendChild(statusRow);
+                container.appendChild(card);
+            });
+        }
+
+        function formatDate(value) {
+            if (!value) return "Not available";
+
+            const date = new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+
+            return date.toLocaleString();
+        }
+
+        async function loadComplaints(showLoading = true) {
+            if (!(await checkAdmin())) return;
+
+            if (showLoading) {
+                container.replaceChildren(
+                    createTextElement("p", "Loading complaints...", "admin-empty")
+                );
+            }
+
+            refreshBtn.disabled = true;
+
+            try {
+                const response = await fetch("/api/complaints", {
+                    credentials: "same-origin"
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.replace("/admin-login.html");
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Could not load complaints.");
+                }
+
+                const complaints = await response.json();
+
+                if (!Array.isArray(complaints)) {
+                    throw new Error("Unexpected response from the server.");
+                }
+
+                allComplaints = complaints;
+                updateStatistics(allComplaints);
+                updateCategoryOptions(allComplaints);
+                renderComplaints();
+            } catch (error) {
+                container.replaceChildren(
+                    createTextElement(
+                        "p",
+                        "Unable to load complaints. Please refresh and try again.",
+                        "admin-empty"
+                    )
+                );
+
+                message.textContent = error.message || "Could not load complaints.";
+            } finally {
+                refreshBtn.disabled = false;
+            }
+        }
+
+        searchInput.addEventListener("input", renderComplaints);
+        statusFilter.addEventListener("change", renderComplaints);
+        categoryFilter.addEventListener("change", renderComplaints);
+
+        refreshBtn.addEventListener("click", () => loadComplaints());
+
+        logoutBtn.addEventListener("click", async () => {
+            logoutBtn.disabled = true;
+            message.textContent = "Logging out...";
+
+            try {
+                const response = await fetch("/api/admin/logout", {
+                    method: "POST",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Logout failed. Please try again.");
+                }
+
+                window.location.replace("/admin-login.html");
+            } catch (error) {
+                message.textContent = error.message || "Logout failed.";
+                logoutBtn.disabled = false;
+            }
+        });
+
+        loadComplaints();
+    </script>
+
+</body>
+</html>
