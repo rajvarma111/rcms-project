@@ -57,8 +57,8 @@ const db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     ssl: process.env.DB_HOST ? {
-        rejectUnauthorized: true
-    } : undefined
+    rejectUnauthorized: false
+} : undefined
 });
 
 // Temporary OTP storage: cleared when the server restarts.
