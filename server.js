@@ -179,14 +179,27 @@ app.post("/api/send-otp", async (req, res) => {
         });
 
         try {
-            await mailer.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: "Your RCMS email verification OTP",
-                text:
-                    `Your Restaurant Complaint Management System OTP is ${otp}.\n\n` +
-                    "It expires in 5 minutes. Do not share this code with anyone."
-            });
+         const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        from: "RCMS <onboarding@resend.dev>",
+        to: [email],
+        subject: "Your RCMS email verification OTP",
+        text:
+            `Your Restaurant Complaint Management System OTP is ${otp}.\n\n` +
+            "It expires in 5 minutes. Do not share this code with anyone."
+    })
+});
+
+const result = await response.json();
+
+if (!response.ok) {
+    throw new Error(result.message || "Resend email failed");
+}
         } catch (mailError) {
             otpStore.delete(email);
             console.error("OTP email error:", mailError.message);
