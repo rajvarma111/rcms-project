@@ -300,36 +300,10 @@ app.post("/api/verify-otp", (req, res) => {
     });
 });
 
-// SUBMIT COMPLAINT — EMAIL VERIFICATION REQUIRED
+
+
+/* SUBMIT COMPLAINT — EMAIL VERIFICATION REQUIRED */
 app.post("/api/complaints", async (req, res) => {
-    
-/* PUBLIC HOMEPAGE STATISTICS — COUNTS ONLY */
-app.get("/api/statistics", async (req, res) => {
-    try {
-        const [rows] = await db.execute(`
-            SELECT
-                COUNT(*) AS total,
-                COALESCE(SUM(status = 'Pending'), 0) AS pending,
-                COALESCE(SUM(status = 'In Progress'), 0) AS inProgress,
-                COALESCE(SUM(status = 'Resolved'), 0) AS resolved
-            FROM complaints
-        `);
-
-        return res.json({
-            total: Number(rows[0].total),
-            pending: Number(rows[0].pending),
-            inProgress: Number(rows[0].inProgress),
-            resolved: Number(rows[0].resolved)
-        });
-    } catch (error) {
-        console.error("Fetch statistics error:", error.message);
-
-        return res.status(500).json({
-            message: "Could not fetch statistics."
-        });
-    }
-});
-
     try {
         const { name, email, category, description } = req.body;
 
@@ -372,24 +346,44 @@ app.get("/api/statistics", async (req, res) => {
             ]
         );
 
-        // Notify admin after the complaint has been saved.
+        // Send a notification to the administrator through Resend.
         try {
-            await mailer.sendMail({
-                from: process.env.EMAIL_USER,
-                to: process.env.ADMIN_EMAIL,
-                subject: `New RCMS Complaint #${result.insertId}`,
-                text:
-                    `A new complaint has been submitted.\n\n` +
-                    `Complaint ID: ${result.insertId}\n` +
-                    `Name: ${name.trim()}\n` +
-                    `Email: ${cleanEmail}\n` +
-                    `Category: ${category.trim()}\n` +
-                    `Description: ${description.trim()}\n` +
-                    `Status: Pending`
+            const response = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    from: "RCMS <onboarding@resend.dev>",
+                    to: [process.env.ADMIN_EMAIL],
+                    subject: `New RCMS Complaint #${result.insertId}`,
+                    text:
+                        `A new complaint has been submitted.\n\n` +
+                        `Complaint ID: ${result.insertId}\n` +
+                        `Name: ${name.trim()}\n` +
+                        `Email: ${cleanEmail}\n` +
+                        `Category: ${category.trim()}\n` +
+                        `Description: ${description.trim()}\n` +
+                        `Status: Pending`
+                })
             });
+
+            const emailResult = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    emailResult.message || "Resend email failed"
+                );
+            }
+
+            console.log("Admin notification email sent successfully.");
         } catch (mailError) {
-            // The complaint is already saved; do not report submission failure.
-            console.error("Admin notification email error:", mailError.message);
+            // The complaint is saved even if notification email fails.
+            console.error(
+                "Admin notification email error:",
+                mailError.message
+            );
         }
 
         return res.status(201).json({
@@ -405,7 +399,7 @@ app.get("/api/statistics", async (req, res) => {
     }
 });
 
-/* PUBLIC HOMEPAGE STATISTICS */
+/* PUBLIC HOMEPAGE STATISTICS — COUNTS ONLY */
 app.get("/api/statistics", async (req, res) => {
     try {
         const [rows] = await db.execute(`
@@ -417,16 +411,16 @@ app.get("/api/statistics", async (req, res) => {
             FROM complaints
         `);
 
-        res.json({
+        return res.json({
             total: Number(rows[0].total),
             pending: Number(rows[0].pending),
             inProgress: Number(rows[0].inProgress),
             resolved: Number(rows[0].resolved)
         });
     } catch (error) {
-        console.error("Statistics error:", error.message);
+        console.error("Fetch statistics error:", error.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Could not fetch statistics."
         });
     }
